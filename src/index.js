@@ -16,21 +16,32 @@ refs.input.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
 function onInput(event) {
   const name = event.target.value.trim();
 
-  fetchCountries(name).then(countries => {
+  if (!name) {
     clearMarkup();
-    if (countries.status === 404) {
-      Notify.failure('Oops, there is no country with that name');
-    } else if (countries.length > 10) {
-      Notify.info('Too many matches found. Please enter a more specific name.');
-    } else if (countries.length >= 2 && countries.length <= 10) {
-      refs.list.innerHTML = renderCountriesListItems(countries);
-    } else if (countries.length === 1) {
-      refs.info.innerHTML = renderCountriesInfo(countries);
-    }
-  });
+    return;
+  }
+
+  fetchCountries(name)
+    .then(countries => {
+      clearMarkup();
+      if (countries.length > 10) {
+        Notify.info(
+          'Too many matches found. Please enter a more specific name.'
+        );
+      } else if (countries.length >= 2 && countries.length <= 10) {
+        refs.list.innerHTML = createCountriesListItemsMarkup(countries);
+      } else if (countries.length === 1) {
+        refs.info.innerHTML = createCountriesInfoMarkup(countries);
+      }
+    })
+    .catch(error => {
+      if (error) {
+        Notify.failure('Oops, there is no country with that name');
+      }
+    });
 }
 
-function renderCountriesListItems(arr) {
+function createCountriesListItemsMarkup(arr) {
   return arr
     .map(
       item =>
@@ -44,7 +55,7 @@ function renderCountriesListItems(arr) {
     .join('');
 }
 
-function renderCountriesInfo(arr) {
+function createCountriesInfoMarkup(arr) {
   let langArr = [];
 
   for (const key in arr[0].languages) {
@@ -69,4 +80,3 @@ function clearMarkup() {
   refs.list.innerHTML = '';
   refs.info.innerHTML = '';
 }
-refs.list.innerHTML = '';
